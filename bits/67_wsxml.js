@@ -10,7 +10,7 @@ var colregex = /<(?:\w:)?col[^>]*[\/]?>/g;
 var afregex = /<(?:\w:)?autoFilter[^>]*([\/]|>([^\u2603]*)<\/(?:\w:)?autoFilter)>/g;
 var marginregex= /<(?:\w:)?pageMargins[^>]*\/>/g;
 /* 18.3 Worksheets */
-function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
+function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles,zip)/*:Worksheet*/ {
 	if(!data) return data;
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 
@@ -77,8 +77,130 @@ function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksh
 	}
 	if(mergecells.length > 0) s["!merges"] = mergecells;
 	if(columns.length > 0) s["!cols"] = columns;
+	parse_images(zip,s,rels);
 	return s;
 }
+
+
+function parse_images(zip,sheet,rels){
+	var images =sheet['!images']  =[];
+	var drawings = Object.keys(rels||{}).filter(function(v){ return v.indexOf("xl/drawings/")>-1; }) || [];
+	drawings.forEach(function(drawing){
+		drawing = drawing.substring(1);
+		var drawing_relsfile ='xl/drawings/_rels/'+drawing.split('xl/drawings/')[1]+'.rels';
+		var drawing_rels = parse_rels(getzipstr(zip,drawing_relsfile),drawing_relsfile);
+		var objs = {};
+		Object.keys(drawing_rels||{}).forEach(function(r){
+			objs[drawing_rels[r].Id] = r.substring(1);
+		});
+		var xmlDoc = new XmlDocument(getzipstr(zip,drawing));
+		var anchors = xmlDoc.getNodes("xdr:twoCellAnchor");
+		anchors.forEach(function(anchor){
+			var blip = anchor.find("a:blip").getAttributes();
+			var objKey = objs[blip.embed];
+			objKey && images.push(getImgData(anchor,sheet,objKey,zip));
+		})
+	})
+}
+
+function getImgData(anchor,s,objKey,zip){
+	var fromCol = anchor.find("xdr:from").find("xdr:col").getInnerText();
+	var fromRow = anchor.find("xdr:from").find("xdr:row").getInnerText();
+	var toCol = anchor.find("xdr:to").find("xdr:col").getInnerText();
+	var toRow = anchor.find("xdr:to").find("xdr:row").getInnerText();
+	return {
+		data:function(){
+			return getzipdata(zip,objKey);
+		},
+		type:'twoCellAnchor',
+		fromCell:getColName(fromCol)+fromRow,
+		toCell:getColName(toCol)+toRow,
+		name:objKey.split('xl/media/')[1],
+		position:{
+			from:{
+				col:fromCol,
+				row:fromRow
+			},
+			to:{
+				col:toCol,
+				row:toRow
+			}
+		}
+	}
+}
+
+function getColName(col){
+	col = Number(col);
+	var ind = (col /26);
+	var mod = col %26;
+	if(mod==0){
+		ind --;
+		mod = 26;
+	}
+	var afterName =String.fromCharCode(mod+64);
+	if(ind>26){
+		return getColName(ind)+afterName;
+	}
+	return ind<1?afterName:String.fromCharCode(ind+64)+afterName;
+}
+
+function XmlDocument(data) {
+	this.data = (data || '').replace(/\n/g, '');
+	this.children = [];
+}
+XmlDocument.prototype.getNodes = function (name) {
+	if (!this.children[name]) {
+		var reg = new RegExp('(<' + name + '.*?>.*?<\/' + name + '?>)');
+		var matches = this.data.match(reg) || [];
+		var children = this.children[name] = [];
+		for (var i = 0, k = matches.length; i < k; i++) {
+			children.push(new XmlNodeParser(matches[i], name));
+		}
+	}
+	return this.children[name];
+}
+
+XmlDocument.prototype.find = function (name) {
+	return this.getNodes(name)[0] || new XmlNodeParser('');
+}
+
+XmlDocument.prototype.getInnerText = function () {
+	return this.trim(this.data.match(/>([^<>].*?)<\//g))
+}
+
+XmlDocument.prototype.getInnerXml = function () {
+	return this.trim(this.data.match(/>.*<\//))
+}
+
+XmlDocument.prototype.trim = function (matches) {
+	matches = matches || [];
+	var value = "";
+	for (var i = 0, k = matches.length; i < k; i++) {
+		value = matches[i].substring(1, matches[i].length - 2);
+	}
+	return value;
+}
+
+XmlDocument.prototype.getAttributes = function () {
+	if (!this.attributes) {
+		this.attributes = {};
+		var starttag = this.data.split("</")[0] || "";
+		var matches = starttag.match(/(\w*)=".*?"/g) || [];
+		for (var i = 0, k = matches.length; i < k; i++) {
+			var kv = matches[i].split('=');
+			var v  =kv[1] || '';
+			this.attributes[kv[0]] =v.substring(1,v.length-1);
+		}
+	}
+	return this.attributes;
+}
+
+function XmlNodeParser(data, name) {
+	this.name = name;
+	this.data = data;
+	this.children = [];
+}
+XmlNodeParser.prototype = new XmlDocument();
 
 function write_ws_xml_merges(merges) {
 	if(merges.length == 0) return "";

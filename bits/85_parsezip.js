@@ -19,7 +19,7 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, shee
 		sheetRels[sheet]=parse_rels(getzipstr(zip, relsPath, true), path);
 		var data = getzipdata(zip, path);
 		switch(stype) {
-			case 'sheet': sheets[sheet]=parse_ws(data, path, opts,sheetRels[sheet], wb, themes, styles); break;
+			case 'sheet': sheets[sheet]=parse_ws(data, path, opts,sheetRels[sheet], wb, themes, styles,zip); break;
 			case 'chart':
 				var cs = parse_cs(data, path, opts,sheetRels[sheet], wb, themes, styles);
 				sheets[sheet] = cs;

@@ -44,8 +44,17 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 		if(header === 1) row = [];
 		else {
 			row = {};
-			if(Object.defineProperty) try { Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false}); } catch(e) { row.__rowNum__ = R; }
-			else row.__rowNum__ = R;
+			if(Object.defineProperty) try { 
+				Object.defineProperty(row, '__cols', {value:hdr, enumerable:false});
+				Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false}); 
+			} catch(e) { 
+				row.__rowNum__ = R;
+				row.__cols = hdr; 
+			}
+			else{
+				row.__cols = hdr;
+				row.__rowNum__ = R;
+			}
 		}
 		if(!dense || sheet[R]) for (C = r.s.c; C <= r.e.c; ++C) {
 			val = dense ? sheet[R][C] : sheet[cols[C] + rr];
