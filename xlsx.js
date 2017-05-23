@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.6';
+XLSX.version = '0.10.8';
 var current_codepage = 1200;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -10681,7 +10681,9 @@ function parse_images(zip,sheet,rels){
 		var drawing_rels = parse_rels(getzipstr(zip,drawing_relsfile),'/'+drawing);
 		var objs = {};
 		Object.keys(drawing_rels||{}).forEach(function(r){
-			objs[drawing_rels[r].Id] = r.substring(1);
+			if(r.indexOf("media/")>-1){
+				objs[drawing_rels[r].Id] = r.substring(1);
+			}
 		});
 		var xmlDoc = new XmlDocument(getzipstr(zip,drawing));
 		var anchors = xmlDoc.getNodes("xdr:twoCellAnchor");
@@ -10698,6 +10700,7 @@ function getImgData(anchor,s,objKey,zip){
 	var fromRow = anchor.find("xdr:from").find("xdr:row").getInnerText();
 	var toCol = anchor.find("xdr:to").find("xdr:col").getInnerText();
 	var toRow = anchor.find("xdr:to").find("xdr:row").getInnerText();
+	
 	return {
 		data:function(){
 			return getzipfile(zip,objKey);
@@ -10740,7 +10743,7 @@ function XmlDocument(data) {
 }
 XmlDocument.prototype.getNodes = function (name) {
 	if (!this.children[name]) {
-		var reg = new RegExp('(<' + name + '.*?>.*?<\/' + name + '?>)');
+		var reg = new RegExp('(<' + name + '.*?>.*?<\/' + name + '?>)','ig');
 		var matches = this.data.match(reg) || [];
 		var children = this.children[name] = [];
 		for (var i = 0, k = matches.length; i < k; i++) {
