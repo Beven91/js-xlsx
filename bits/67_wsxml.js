@@ -110,7 +110,7 @@ function getImgData(anchor,s,objKey,zip){
 	var toRow = anchor.find("xdr:to").find("xdr:row").getInnerText();
 	return {
 		data:function(){
-			return getzipdata(zip,objKey);
+			return getzipfile(zip,objKey);
 		},
 		type:'twoCellAnchor',
 		fromCell:getColName(fromCol)+fromRow,
