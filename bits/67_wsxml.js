@@ -88,7 +88,7 @@ function parse_images(zip,sheet,rels){
 	drawings.forEach(function(drawing){
 		drawing = drawing.substring(1);
 		var drawing_relsfile ='xl/drawings/_rels/'+drawing.split('xl/drawings/')[1]+'.rels';
-		var drawing_rels = parse_rels(getzipstr(zip,drawing_relsfile),drawing_relsfile);
+		var drawing_rels = parse_rels(getzipstr(zip,drawing_relsfile),'/'+drawing);
 		var objs = {};
 		Object.keys(drawing_rels||{}).forEach(function(r){
 			objs[drawing_rels[r].Id] = r.substring(1);
