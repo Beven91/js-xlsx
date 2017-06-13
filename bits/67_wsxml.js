@@ -268,7 +268,8 @@ function parse_ws_xml_hlinks (s, data /*:Array<string>*/, rels) {
 }
 
 function parse_ws_xml_margins (margin) {
-  var o = {}['left', 'right', 'top', 'bottom', 'header', 'footer'].forEach(function (k) {
+  var o = {};
+  ['left', 'right', 'top', 'bottom', 'header', 'footer'].forEach(function (k) {
     if (margin[k]) o[k] = parseFloat(margin[k])
   })
   return o
