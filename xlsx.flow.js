@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.8';
+XLSX.version = '0.11.1';
 var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -10923,7 +10923,8 @@ function parse_ws_xml_hlinks (s, data /*:Array<string>*/, rels) {
 }
 
 function parse_ws_xml_margins (margin) {
-  var o = {}['left', 'right', 'top', 'bottom', 'header', 'footer'].forEach(function (k) {
+  var o = {};
+  ['left', 'right', 'top', 'bottom', 'header', 'footer'].forEach(function (k) {
     if (margin[k]) o[k] = parseFloat(margin[k])
   })
   return o
