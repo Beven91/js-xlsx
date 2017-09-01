@@ -1,5 +1,7 @@
 test_files/
 tests/files/
+node_modules/
+.git/
 types/
 demos/
 index.html
@@ -47,3 +49,4 @@ test.js
 bits/
 docbits/
 tests/
+dist/
