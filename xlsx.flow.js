@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.11.1';
+XLSX.version = '0.11.2';
 var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -17619,7 +17619,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 	if(dense && !sheet[R]) sheet[R] = [];
 	for(C = r.s.c; C <= r.e.c; ++C) {
 		cols[C] = encode_col(C);
-		val = dense ? sheet[R][C] : sheet[cols[C] + rr];
+		val = dense ? sheet[R][C] : sheet[cols[C] + rr] || sheet[cols[C]+(Number(rr)-1)];
 		switch(header) {
 			case 1: hdr[C] = C - r.s.c; break;
 			case 2: hdr[C] = cols[C]; break;
